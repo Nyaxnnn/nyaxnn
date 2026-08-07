@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Mizan — Budget & Net Worth</title>
+  <meta name="description" content="A private, local-first budgeting and net worth tracker. Your data never leaves your device." />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <link rel="icon" href="./icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Mizan" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">⚖</span>
+        <span class="brand-name">Mizan</span>
+      </div>
+      <button type="button" id="nav-toggle" class="icon-btn nav-toggle" aria-label="Toggle menu">☰</button>
+    </header>
+
+    <nav id="nav" class="nav">
+      <a class="nav-link" href="#/">Dashboard</a>
+      <a class="nav-link" href="#/track">Track</a>
+      <a class="nav-link" href="#/transactions">Transactions</a>
+      <a class="nav-link" href="#/budget">Budget</a>
+      <a class="nav-link" href="#/insights">Insights</a>
+      <a class="nav-link" href="#/networth">Net Worth</a>
+      <a class="nav-link" href="#/settings">Settings</a>
+    </nav>
+
+    <main id="app-view" class="app-view" aria-live="polite"></main>
+  </div>
+
+  <div id="modal-root"></div>
+  <div id="toast-root" class="toast-root"></div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
