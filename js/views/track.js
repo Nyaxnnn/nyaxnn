@@ -3,7 +3,8 @@
 // shows up in Insights. This view exists purely to make logging quick.
 
 import { DB } from '../db.js';
-import { getMonthSummary } from '../budget-logic.js';
+import { getMonthSummary, spendingByGroup } from '../budget-logic.js';
+import { donutChart } from '../charts.js';
 import { formatMoney, todayIso, monthLabel, formatDateShort, escapeHtml } from '../format.js';
 import { toast } from '../ui.js';
 import { openTransactionModal } from '../transaction-form.js';
@@ -40,6 +41,13 @@ export async function render(root) {
     .filter((t) => t.type === 'expense' && t.date === state.date)
     .reduce((s, t) => s + Math.abs(t.amount), 0);
   const monthSpent = monthTx.filter((t) => t.type === 'expense').reduce((s, t) => s + Math.abs(t.amount), 0);
+
+  const groupSpend = await spendingByGroup(month);
+  const groupTotal = groupSpend.reduce((s, g) => s + g.value, 0);
+  const groupChartData = groupSpend.map((g) => ({
+    ...g,
+    label: groupTotal > 0 ? `${g.label} (${Math.round((g.value / groupTotal) * 100)}%)` : g.label,
+  }));
 
   const days = groupByDay(monthTx);
 
@@ -101,6 +109,13 @@ export async function render(root) {
         <div class="stat-value">${formatMoney(summary.toBeBudgeted, currency)}</div>
       </div>
     </div>
+
+    <section class="panel">
+      <div class="panel-header"><h3>Needs, Wants & Savings — ${monthLabel(month)}</h3></div>
+      ${groupTotal > 0
+        ? donutChart(groupChartData, { currency })
+        : `<p class="empty-hint">Log a few expenses and this will show how your money splits across needs, wants, and savings.</p>`}
+    </section>
 
     <section class="panel">
       <div class="panel-header">

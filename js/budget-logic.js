@@ -96,6 +96,27 @@ export async function spendingByCategory(month) {
     .sort((a, b) => b.value - a.value);
 }
 
+const GROUP_ORDER = ['Needs', 'Wants', 'Savings', 'Investing'];
+const GROUP_COLORS = {
+  Needs: '#3b82f6',
+  Wants: '#f59e0b',
+  Savings: '#10b981',
+  Investing: '#8b5cf6',
+};
+
+export async function spendingByGroup(month) {
+  const summary = await getMonthSummary(month);
+  const totals = new Map();
+  for (const row of summary.rows) {
+    const group = row.category.group || 'Other';
+    totals.set(group, (totals.get(group) || 0) + row.spent);
+  }
+  return Array.from(totals.entries())
+    .filter(([, value]) => value > 0)
+    .sort((a, b) => GROUP_ORDER.indexOf(a[0]) - GROUP_ORDER.indexOf(b[0]))
+    .map(([label, value]) => ({ label, value, color: GROUP_COLORS[label] || '#64748b' }));
+}
+
 export async function incomeExpenseTrend(monthsBack = 6, endMonth) {
   const end = endMonth || monthOf(new Date().toISOString());
   const months = [];
