@@ -122,7 +122,7 @@ export async function render(root) {
         <h3>Daily log</h3>
         <a href="#/budget" class="link">See budget impact →</a>
       </div>
-      ${days.length ? days.map(dayGroup(currency)).join('') : `<p class="empty-hint">Nothing logged yet this month — add your first expense above.</p>`}
+      ${days.length ? days.map(dayGroup(currency, categories)).join('') : `<p class="empty-hint">Nothing logged yet this month — add your first expense above.</p>`}
     </section>
   `;
 
@@ -182,6 +182,22 @@ export async function render(root) {
       if (t) openTransactionModal({ transaction: t, onSaved: () => render(root) });
     });
   });
+
+  root.querySelectorAll('[data-tx-recategorize]').forEach((select) => {
+    select.addEventListener('click', (e) => e.stopPropagation());
+    select.addEventListener('change', async (e) => {
+      e.stopPropagation();
+      const id = Number(select.dataset.txRecategorize);
+      const newCategoryId = Number(select.value);
+      const all = await DB.listTransactions();
+      const t = all.find((x) => x.id === id);
+      if (!t) return;
+      await DB.saveTransaction({ ...t, categoryId: newCategoryId });
+      const newCategory = categories.find((c) => c.id === newCategoryId);
+      toast(`Moved to ${newCategory?.group || ''} — ${newCategory?.name || ''}`, { type: 'success' });
+      render(root);
+    });
+  });
 }
 
 function groupByDay(transactions) {
@@ -199,7 +215,7 @@ function groupByDay(transactions) {
     }));
 }
 
-function dayGroup(currency) {
+function dayGroup(currency, categories) {
   return ({ date, txs, total }) => `
     <div class="day-group">
       <div class="day-header">
@@ -207,19 +223,28 @@ function dayGroup(currency) {
         <span class="muted">${formatMoney(total, currency)}</span>
       </div>
       <div class="tx-list">
-        ${txs.map((t) => txRow(t, currency)).join('')}
+        ${txs.map((t) => txRow(t, currency, categories)).join('')}
       </div>
     </div>
   `;
 }
 
-function txRow(t, currency) {
+function txRow(t, currency, categories) {
   const sign = t.type === 'income' ? '+' : t.type === 'expense' ? '−' : '';
   const cls = t.type === 'income' ? 'positive' : t.type === 'expense' ? 'negative' : '';
+  const category = t.categoryId != null ? categories.find((c) => c.id === t.categoryId) : null;
+
+  const tag = t.type === 'expense'
+    ? `<select class="group-tag" data-tx-recategorize="${t.id}" style="--tag-color:${category?.color || '#64748b'}" aria-label="Category and group for this expense">
+        ${categories.map((c) => `<option value="${c.id}" ${c.id === t.categoryId ? 'selected' : ''}>${escapeHtml(c.group)} · ${escapeHtml(c.name)}</option>`).join('')}
+      </select>`
+    : '';
+
   return `
     <div class="tx-row" data-tx-id="${t.id}" role="button" tabindex="0">
       <div class="tx-main">
         <span class="tx-payee">${escapeHtml(t.payee || (t.type === 'income' ? 'Income' : t.type === 'transfer' ? 'Transfer' : 'Expense'))}</span>
+        ${tag}
       </div>
       <span class="tx-amount ${cls}">${sign}${formatMoney(Math.abs(t.amount), currency)}</span>
     </div>
