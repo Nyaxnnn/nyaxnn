@@ -1,6 +1,8 @@
 // Small shared UI helpers: modal dialogs, toasts, confirmation prompts.
 // Kept dependency-free on purpose.
 
+import { icon } from './icons.js';
+
 let modalRoot;
 let toastRoot;
 
@@ -21,7 +23,7 @@ export function openModal({ title, bodyHtml, footerHtml = '', onMount, onClose }
     <div class="modal" role="dialog" aria-modal="true" aria-label="${title}">
       <div class="modal-header">
         <h3>${title}</h3>
-        <button type="button" class="icon-btn modal-close" aria-label="Close">✕</button>
+        <button type="button" class="icon-btn modal-close" aria-label="Close">${icon('close')}</button>
       </div>
       <div class="modal-body">${bodyHtml}</div>
       ${footerHtml ? `<div class="modal-footer">${footerHtml}</div>` : ''}

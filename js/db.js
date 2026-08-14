@@ -2,7 +2,7 @@
 // makes a network request. See README.md for the backup/restore story.
 
 const DB_NAME = 'mizan';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbPromise = null;
 
@@ -43,6 +43,10 @@ function openDb() {
       }
       if (!db.objectStoreNames.contains('settings')) {
         db.createObjectStore('settings', { keyPath: 'key' });
+      }
+      if (!db.objectStoreNames.contains('subscriptions')) {
+        const s = db.createObjectStore('subscriptions', { keyPath: 'id', autoIncrement: true });
+        s.createIndex('active', 'active');
       }
     };
 
@@ -171,6 +175,24 @@ export const DB = {
     return del('netWorthSnapshots', id);
   },
 
+  // Recurring subscriptions
+  async listSubscriptions({ includeInactive = false } = {}) {
+    const all = await getAll('subscriptions');
+    return all
+      .filter((s) => includeInactive || s.active !== false)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  },
+  async listAllSubscriptions() {
+    return getAll('subscriptions');
+  },
+  async saveSubscription(sub) {
+    if (!sub.createdAt) sub.createdAt = new Date().toISOString();
+    return put('subscriptions', sub);
+  },
+  async deleteSubscription(id) {
+    return del('subscriptions', id);
+  },
+
   // Settings
   async getSetting(key, fallback) {
     const row = await get('settings', key);
@@ -182,13 +204,14 @@ export const DB = {
 
   // Backup / restore — the whole privacy story hinges on this working reliably.
   async exportAll() {
-    const [accounts, categories, transactions, budgetAllocations, netWorthSnapshots, settingsRows] =
+    const [accounts, categories, transactions, budgetAllocations, netWorthSnapshots, subscriptions, settingsRows] =
       await Promise.all([
         getAll('accounts'),
         getAll('categories'),
         getAll('transactions'),
         getAll('budgetAllocations'),
         getAll('netWorthSnapshots'),
+        getAll('subscriptions'),
         getAll('settings'),
       ]);
     return {
@@ -199,11 +222,12 @@ export const DB = {
       transactions,
       budgetAllocations,
       netWorthSnapshots,
+      subscriptions,
       settings: settingsRows,
     };
   },
   async importAll(data) {
-    const stores = ['accounts', 'categories', 'transactions', 'budgetAllocations', 'netWorthSnapshots', 'settings'];
+    const stores = ['accounts', 'categories', 'transactions', 'budgetAllocations', 'netWorthSnapshots', 'subscriptions', 'settings'];
     for (const name of stores) {
       await clearStore(name);
     }
@@ -220,7 +244,7 @@ export const DB = {
     });
   },
   async wipeAll() {
-    const stores = ['accounts', 'categories', 'transactions', 'budgetAllocations', 'netWorthSnapshots', 'settings'];
+    const stores = ['accounts', 'categories', 'transactions', 'budgetAllocations', 'netWorthSnapshots', 'subscriptions', 'settings'];
     for (const name of stores) await clearStore(name);
   },
 };

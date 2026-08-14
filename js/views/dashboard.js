@@ -2,6 +2,7 @@ import { DB } from '../db.js';
 import { getMonthSummary } from '../budget-logic.js';
 import { formatMoney, monthLabel, currentMonth, shiftMonth, formatDateShort, escapeHtml } from '../format.js';
 import { openTransactionModal } from '../transaction-form.js';
+import { icon } from '../icons.js';
 
 let state = { month: currentMonth() };
 
@@ -17,9 +18,9 @@ export async function render(root) {
   root.innerHTML = `
     <div class="view-header">
       <div class="month-switcher">
-        <button type="button" class="icon-btn" data-action="prev-month" aria-label="Previous month">‹</button>
+        <button type="button" class="icon-btn" data-action="prev-month" aria-label="Previous month">${icon('chevronLeft')}</button>
         <h2>${monthLabel(state.month)}</h2>
-        <button type="button" class="icon-btn" data-action="next-month" aria-label="Next month">›</button>
+        <button type="button" class="icon-btn" data-action="next-month" aria-label="Next month">${icon('chevronRight')}</button>
       </div>
       <button type="button" class="btn btn-primary" data-action="quick-add">+ Add transaction</button>
     </div>

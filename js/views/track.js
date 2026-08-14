@@ -8,6 +8,7 @@ import { donutChart } from '../charts.js';
 import { formatMoney, todayIso, monthLabel, formatDateShort, escapeHtml } from '../format.js';
 import { toast } from '../ui.js';
 import { openTransactionModal } from '../transaction-form.js';
+import { icon } from '../icons.js';
 
 let state = { date: todayIso(), categoryId: null, accountId: null };
 
@@ -243,7 +244,10 @@ function txRow(t, currency, categories) {
   return `
     <div class="tx-row" data-tx-id="${t.id}" role="button" tabindex="0">
       <div class="tx-main">
-        <span class="tx-payee">${escapeHtml(t.payee || (t.type === 'income' ? 'Income' : t.type === 'transfer' ? 'Transfer' : 'Expense'))}</span>
+        <span class="tx-payee">
+          ${escapeHtml(t.payee || (t.type === 'income' ? 'Income' : t.type === 'transfer' ? 'Transfer' : 'Expense'))}
+          ${t.recurring ? `<span class="recurring-mark">${icon('repeat')} auto</span>` : ''}
+        </span>
         ${tag}
       </div>
       <span class="tx-amount ${cls}">${sign}${formatMoney(Math.abs(t.amount), currency)}</span>

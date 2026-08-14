@@ -86,6 +86,27 @@ month so far, with a subtotal per day.
 The **Transactions** tab is the same underlying data, but built for reviewing
 and filtering (by account, category, search) rather than fast entry.
 
+## Subscriptions (recurring charges)
+
+The **Subscriptions** tab handles anything that charges you on a schedule —
+Netflix, gym membership, insurance, rent. Set a name, amount, category,
+account, and whether it repeats **monthly** (on a day of the month) or
+**yearly** (on a specific month + day), and Mizan takes it from there:
+
+- Every due date, a real expense transaction is generated automatically —
+  no manual entry — and it shows up in **Track**'s daily log (tagged "auto"
+  with a repeat icon) and counts against its category's envelope in
+  **Budget**, exactly like anything you logged by hand.
+- Since this is a local-first app with no server running in the background,
+  "automatic" means: it catches up on every due date, generating each one
+  it missed, the next time you open the app on or after that date — it
+  never skips or double-charges a period.
+- Pausing a subscription stops future charges without deleting the history
+  of what it already generated; resuming immediately catches up anything
+  that came due while paused.
+- The tab also shows your total monthly and yearly recurring cost across
+  everything active, so you can see that number at a glance.
+
 ## How the budgeting works
 
 Zero-based / envelope budgeting, the method behind YNAB:
@@ -132,10 +153,12 @@ css/style.css           All styling
 js/db.js               IndexedDB schema + queries (the only place touching storage)
 js/budget-logic.js      Zero-based budgeting math (rollover, To Be Budgeted)
 js/networth-logic.js    Cash balance + net worth aggregation
+js/subscription-logic.js Recurring-charge due-date math + auto-generation
 js/charts.js            Dependency-free SVG bar/line/donut chart renderers
 js/ui.js                Modal/toast helpers shared across views
-js/*-form.js            Add/edit modals for transactions, categories, accounts
-js/views/*.js           One render function per screen (Dashboard, Track, Budget, …)
+js/icons.js             Inline SVG icon set (no icon font, no external asset)
+js/*-form.js            Add/edit modals for transactions, categories, accounts, subscriptions
+js/views/*.js           One render function per screen (Dashboard, Track, Budget, Subscriptions, …)
 js/router.js, main.js   Hash router + app bootstrap, first-run category seeding
 icons/                  PWA icons (generated locally, no external assets)
 ```

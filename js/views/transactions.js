@@ -1,6 +1,7 @@
 import { DB } from '../db.js';
 import { formatMoney, formatDateLong, currentMonth, monthLabel, shiftMonth, escapeHtml } from '../format.js';
 import { openTransactionModal } from '../transaction-form.js';
+import { icon } from '../icons.js';
 
 let state = { month: currentMonth(), accountId: '', categoryId: '', search: '' };
 
@@ -23,9 +24,9 @@ export async function render(root) {
   root.innerHTML = `
     <div class="view-header">
       <div class="month-switcher">
-        <button type="button" class="icon-btn" data-action="prev-month" aria-label="Previous month">‹</button>
+        <button type="button" class="icon-btn" data-action="prev-month" aria-label="Previous month">${icon('chevronLeft')}</button>
         <h2>${state.month ? monthLabel(state.month) : 'All time'}</h2>
-        <button type="button" class="icon-btn" data-action="next-month" aria-label="Next month">›</button>
+        <button type="button" class="icon-btn" data-action="next-month" aria-label="Next month">${icon('chevronRight')}</button>
       </div>
       <button type="button" class="btn btn-primary" data-action="add">+ Add transaction</button>
     </div>

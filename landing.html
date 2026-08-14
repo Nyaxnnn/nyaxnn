@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mizan — a private ledger for every riyal</title>
+<meta name="description" content="A local-first budgeting ledger: envelopes, daily tracking, recurring charges, and net worth — kept on your device, never a server." />
+<meta name="theme-color" content="#f6f3ea" />
+<style>
+  :root {
+    --bg: #f6f3ea;
+    --surface: #fffdf8;
+    --text: #14110a;
+    --text-muted: #6b6558;
+    --accent: #0e9f6e;
+    --accent-ink: #062e21;
+    --accent-2: #3b5fe0;
+    --border: rgba(20, 17, 10, 0.12);
+    --border-strong: rgba(20, 17, 10, 0.22);
+    --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", "P052", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", "Courier New", monospace;
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b1220;
+      --surface: #131b2e;
+      --text: #f1ede2;
+      --text-muted: #8d96ac;
+      --accent: #16c98a;
+      --accent-ink: #04170f;
+      --accent-2: #6c8cff;
+      --border: rgba(241, 237, 226, 0.12);
+      --border-strong: rgba(241, 237, 226, 0.22);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b1220; --surface: #131b2e; --text: #f1ede2; --text-muted: #8d96ac;
+    --accent: #16c98a; --accent-ink: #04170f; --accent-2: #6c8cff;
+    --border: rgba(241, 237, 226, 0.12); --border-strong: rgba(241, 237, 226, 0.22);
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f3ea; --surface: #fffdf8; --text: #14110a; --text-muted: #6b6558;
+    --accent: #0e9f6e; --accent-ink: #062e21; --accent-2: #3b5fe0;
+    --border: rgba(20, 17, 10, 0.12); --border-strong: rgba(20, 17, 10, 0.22);
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent); color: var(--accent-ink); }
+
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; margin: 0; text-wrap: balance; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent-2); outline-offset: 3px; }
+
+  .wrap { max-width: 780px; margin: 0 auto; padding: 0 24px; }
+  .wrap-wide { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+  .wordmark { display: flex; align-items: baseline; gap: 8px; font-family: var(--serif); font-size: 1.15rem; font-weight: 600; text-decoration: none; }
+  .wordmark span { font-family: var(--mono); font-size: 0.72rem; color: var(--text-muted); font-weight: 400; letter-spacing: 0.02em; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--sans); font-size: 0.92rem; font-weight: 600;
+    padding: 11px 20px; border-radius: 999px; text-decoration: none;
+    border: 1px solid transparent; cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 35%, transparent); }
+  .btn-primary:hover { box-shadow: 0 8px 26px color-mix(in srgb, var(--accent) 45%, transparent); }
+  .btn-ghost { border-color: var(--border-strong); color: var(--text); }
+  .btn-ghost:hover { border-color: var(--accent-2); color: var(--accent-2); }
+  .btn-sm { padding: 8px 14px; font-size: 0.82rem; }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: 92px 24px 40px; text-align: center; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.06em;
+    color: var(--text-muted); margin-bottom: 22px; display: block;
+  }
+  .eyebrow bdi { color: var(--text); font-size: 0.95rem; }
+  .hero h1 {
+    font-size: clamp(2.4rem, 5.6vw, 4.2rem);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    max-width: 15ch;
+    margin: 0 auto;
+  }
+  .hero p {
+    max-width: 46ch; margin: 24px auto 0; color: var(--text-muted);
+    font-size: 1.08rem; line-height: 1.65;
+  }
+  .hero-actions { display: flex; gap: 14px; justify-content: center; margin-top: 34px; flex-wrap: wrap; }
+
+  /* ---------- Scale visual ---------- */
+  .scale-stage {
+    max-width: 520px; margin: 64px auto 0; padding: 0 24px;
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+  }
+  .scale-stage svg { width: 100%; height: auto; max-width: 420px; }
+  .scale-caption { font-family: var(--mono); font-size: 0.74rem; color: var(--text-muted); letter-spacing: 0.03em; }
+  #beam { transform-origin: 210px 90px; transition: transform 0.5s cubic-bezier(0.34, 1.2, 0.4, 1); }
+  @media (prefers-reduced-motion: reduce) { #beam { transition: none; } }
+
+  /* ---------- Sections ---------- */
+  section { padding: 76px 0; }
+  .section-head { text-align: center; margin-bottom: 48px; }
+  .section-head .eyebrow { margin-bottom: 12px; }
+  .section-head h2 { font-size: clamp(1.7rem, 3.4vw, 2.3rem); max-width: 22ch; margin: 0 auto; }
+  .section-head p { color: var(--text-muted); max-width: 52ch; margin: 14px auto 0; }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+  /* ---------- Feature grid ---------- */
+  .features {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border); border-radius: 4px; overflow: hidden;
+  }
+  .feature {
+    background: var(--surface); padding: 30px 26px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .feature .num { font-family: var(--mono); font-size: 0.76rem; color: var(--accent-2); }
+  .feature h3 { font-size: 1.15rem; }
+  .feature p { color: var(--text-muted); font-size: 0.95rem; margin: 0; line-height: 1.6; }
+
+  /* ---------- Ledger mockup ---------- */
+  .ledger {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+    padding: 28px; margin-top: 56px;
+    box-shadow: 0 30px 60px -30px color-mix(in srgb, var(--text) 25%, transparent);
+  }
+  .ledger-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 22px; }
+  .ledger-head h3 { font-size: 1rem; font-family: var(--sans); font-weight: 700; }
+  .ledger-head span { font-family: var(--mono); font-size: 0.76rem; color: var(--text-muted); }
+  .ledger-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 13px 0; border-top: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+  }
+  .ledger-row:first-of-type { border-top: none; }
+  .ledger-cat { display: flex; align-items: center; gap: 10px; font-size: 0.92rem; }
+  .ledger-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .ledger-bar { width: 90px; height: 5px; border-radius: 99px; background: var(--border); overflow: hidden; display: none; }
+  .ledger-fill { height: 100%; background: var(--accent); }
+  .ledger-amt { font-family: var(--mono); font-size: 0.88rem; }
+  @media (min-width: 560px) { .ledger-bar { display: block; } }
+
+  /* ---------- Privacy section ---------- */
+  .privacy-wrap { display: grid; grid-template-columns: 1fr; gap: 40px; align-items: start; }
+  @media (min-width: 720px) { .privacy-wrap { grid-template-columns: 1fr 1fr; } }
+  .privacy-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 24px; }
+  .privacy-list li { padding-left: 26px; position: relative; }
+  .privacy-list li::before {
+    content: ""; position: absolute; left: 0; top: 8px; width: 8px; height: 8px;
+    border-radius: 50%; background: var(--accent);
+  }
+  .privacy-list h3 { font-size: 1.02rem; font-family: var(--sans); font-weight: 700; margin-bottom: 4px; }
+  .privacy-list p { margin: 0; color: var(--text-muted); font-size: 0.94rem; }
+
+  /* ---------- Origin note ---------- */
+  .origin {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+    padding: 36px 32px;
+  }
+  .origin p { color: var(--text-muted); font-size: 1rem; line-height: 1.75; margin: 0; }
+  .origin p + p { margin-top: 16px; }
+  .origin cite { font-style: normal; color: var(--text); font-family: var(--mono); font-size: 0.82rem; display: block; margin-top: 18px; }
+
+  /* ---------- Final CTA ---------- */
+  .final-cta { text-align: center; padding: 90px 24px 100px; }
+  .final-cta h2 { font-size: clamp(1.9rem, 4vw, 2.7rem); max-width: 18ch; margin: 0 auto; }
+  .final-cta .hero-actions { margin-top: 30px; }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 28px 24px; text-align: center;
+    color: var(--text-muted); font-size: 0.82rem;
+  }
+  footer a { color: var(--text-muted); text-decoration: underline; text-underline-offset: 3px; }
+  footer a:hover { color: var(--accent-2); }
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <a class="wordmark" href="#top">Mizan <span>ميزان</span></a>
+    <a class="btn btn-primary btn-sm" href="./index.html">Open Mizan</a>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap">
+        <span class="eyebrow"><bdi lang="ar">ميزان</bdi> · mīzān · noun · a scale, a balance</span>
+        <h1>Every riyal, given a job.</h1>
+        <p>A private budgeting ledger — envelopes, daily tracking, recurring charges, and net worth — kept in balance without a bank login, a subscription, or a server that knows your business.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="./index.html">Open Mizan</a>
+          <a class="btn btn-ghost" href="https://github.com/Nyaxnnn/nyaxnn" target="_blank" rel="noopener">See the source</a>
+        </div>
+      </div>
+
+      <div class="scale-stage" id="scaleStage">
+        <svg viewBox="0 0 420 220" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <line x1="210" y1="90" x2="210" y2="200" stroke="var(--border-strong)" stroke-width="2"/>
+          <path d="M186 200 L234 200 L224 214 L196 214 Z" fill="var(--text)" opacity="0.85"/>
+          <g id="beam">
+            <line x1="40" y1="90" x2="380" y2="90" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="210" cy="90" r="6" fill="var(--accent-2)"/>
+            <line x1="40" y1="90" x2="40" y2="140" stroke="var(--border-strong)" stroke-width="1.5"/>
+            <path d="M14 140 Q40 168 66 140" stroke="var(--text)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <line x1="380" y1="90" x2="380" y2="140" stroke="var(--border-strong)" stroke-width="1.5"/>
+            <path d="M354 140 Q380 168 406 140" stroke="var(--text)" stroke-width="2" fill="none" stroke-linecap="round"/>
+          </g>
+        </svg>
+        <span class="scale-caption">tips toward whatever you feed it — try moving your cursor</span>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <section id="features">
+      <div class="wrap-wide">
+        <div class="section-head">
+          <span class="eyebrow">What it actually does</span>
+          <h2>Five screens. No dashboard theater.</h2>
+        </div>
+        <div class="features">
+          <div class="feature">
+            <span class="num">01</span>
+            <h3>Track</h3>
+            <p>One amount field, one tap on a category, done. Built for logging a purchase in the ten seconds you have between patients, not for a sit-down session.</p>
+          </div>
+          <div class="feature">
+            <span class="num">02</span>
+            <h3>Budget</h3>
+            <p>Zero-based envelopes — every riyal you earn gets assigned somewhere. Unspent balances roll into next month instead of vanishing on the 1st.</p>
+          </div>
+          <div class="feature">
+            <span class="num">03</span>
+            <h3>Subscriptions</h3>
+            <p>Set a charge once — monthly or yearly — and it enters itself into Track and Budget on schedule. Pause it, and it stays paused until you say otherwise.</p>
+          </div>
+          <div class="feature">
+            <span class="num">04</span>
+            <h3>Insights</h3>
+            <p>Where the money actually went, split by needs, wants, and savings — not a wall of charts you have to interpret before your coffee's cold.</p>
+          </div>
+          <div class="feature">
+            <span class="num">05</span>
+            <h3>Net worth</h3>
+            <p>Cash accounts tally themselves from your transactions. Investments you update by hand, whenever you happen to check them — no bank credentials required.</p>
+          </div>
+        </div>
+
+        <div class="ledger">
+          <div class="ledger-head">
+            <h3>This month</h3>
+            <span>SAR</span>
+          </div>
+          <div class="ledger-row">
+            <span class="ledger-cat"><span class="ledger-dot" style="background:#3b82f6"></span>Rent &amp; utilities</span>
+            <span class="ledger-bar"><span class="ledger-fill" style="width:82%;background:#3b82f6"></span></span>
+            <span class="ledger-amt">3,200 / 3,900</span>
+          </div>
+          <div class="ledger-row">
+            <span class="ledger-cat"><span class="ledger-dot" style="background:#f59e0b"></span>Groceries &amp; dining</span>
+            <span class="ledger-bar"><span class="ledger-fill" style="width:61%;background:#f59e0b"></span></span>
+            <span class="ledger-amt">1,340 / 2,200</span>
+          </div>
+          <div class="ledger-row">
+            <span class="ledger-cat"><span class="ledger-dot" style="background:#0e9f6e"></span>Investing</span>
+            <span class="ledger-bar"><span class="ledger-fill" style="width:100%;background:#0e9f6e"></span></span>
+            <span class="ledger-amt">4,000 / 4,000</span>
+          </div>
+          <div class="ledger-row">
+            <span class="ledger-cat"><span class="ledger-dot" style="background:#8b5cf6"></span>Subscriptions</span>
+            <span class="ledger-bar"><span class="ledger-fill" style="width:100%;background:#8b5cf6"></span></span>
+            <span class="ledger-amt">218 / 218 · auto</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <section id="privacy">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Why local-first</span>
+          <h2>Nothing to breach, because there's nowhere for it to sit.</h2>
+        </div>
+        <div class="privacy-wrap">
+          <ul class="privacy-list">
+            <li>
+              <h3>No account</h3>
+              <p>Nothing to sign up for, nothing to lose the password to.</p>
+            </li>
+            <li>
+              <h3>No server</h3>
+              <p>Your balances, categories, and transactions live in this browser's own storage — they never leave the device.</p>
+            </li>
+          </ul>
+          <ul class="privacy-list">
+            <li>
+              <h3>No bank link</h3>
+              <p>You type the numbers in. Slower than Plaid, but nothing with read access to your accounts.</p>
+            </li>
+            <li>
+              <h3>Yours to move</h3>
+              <p>One button exports everything as a plain file, for backup or for carrying to another device by hand.</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <section id="origin">
+      <div class="wrap">
+        <div class="origin">
+          <p>Built for one person's actual problem: a resident's schedule leaves no room for a budgeting app that wants a sit-down session, and no appetite for another account holding financial data on a server somewhere.</p>
+          <p>So it's a ledger you can open between patients, log an expense in under ten seconds, and close — with the accounting done automatically underneath.</p>
+          <cite>— built and kept running by its one user</cite>
+        </div>
+      </div>
+    </section>
+
+    <section class="final-cta">
+      <div class="wrap">
+        <span class="eyebrow"><bdi lang="ar">ميزان</bdi></span>
+        <h2>Open the ledger.</h2>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="./index.html">Open Mizan</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Runs entirely in your browser · <a href="https://github.com/Nyaxnnn/nyaxnn" target="_blank" rel="noopener">source on GitHub</a>
+  </footer>
+
+  <script>
+    (function () {
+      var beam = document.getElementById('beam');
+      var stage = document.getElementById('scaleStage');
+      var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!beam || !stage || reduceMotion) return;
+
+      stage.addEventListener('mousemove', function (e) {
+        var rect = stage.getBoundingClientRect();
+        var x = (e.clientX - rect.left) / rect.width;
+        var tilt = (x - 0.5) * 14;
+        beam.style.transform = 'rotate(' + tilt.toFixed(2) + 'deg)';
+      });
+      stage.addEventListener('mouseleave', function () {
+        beam.style.transform = 'rotate(0deg)';
+      });
+
+      var settle = [4, -3, 1.5, 0];
+      var i = 0;
+      function tick() {
+        if (i < settle.length) {
+          beam.style.transform = 'rotate(' + settle[i] + 'deg)';
+          i++;
+          setTimeout(tick, 420);
+        }
+      }
+      setTimeout(tick, 300);
+    })();
+  </script>
+</body>
+</html>

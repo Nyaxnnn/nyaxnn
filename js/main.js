@@ -1,9 +1,12 @@
 import { DB } from './db.js';
 import { registerRoute, startRouter } from './router.js';
+import { generateDueTransactions } from './subscription-logic.js';
+import { toast } from './ui.js';
 import * as dashboard from './views/dashboard.js';
 import * as track from './views/track.js';
 import * as transactions from './views/transactions.js';
 import * as budget from './views/budget.js';
+import * as subscriptions from './views/subscriptions.js';
 import * as insights from './views/insights.js';
 import * as networth from './views/networth.js';
 import * as settings from './views/settings.js';
@@ -50,11 +53,21 @@ async function main() {
   registerRoute('/track', track.render);
   registerRoute('/transactions', transactions.render);
   registerRoute('/budget', budget.render);
+  registerRoute('/subscriptions', subscriptions.render);
   registerRoute('/insights', insights.render);
   registerRoute('/networth', networth.render);
   registerRoute('/settings', settings.render);
 
   await seedIfEmpty();
+
+  const generated = await generateDueTransactions();
+  if (generated.length) {
+    const total = generated.reduce((sum, g) => sum + g.count, 0);
+    const label = generated.length === 1
+      ? generated[0].subscription.name
+      : `${generated.length} subscriptions`;
+    toast(`${label} — ${total} due charge${total > 1 ? 's' : ''} added automatically`, { type: 'success' });
+  }
 
   const root = document.getElementById('app-view');
   await startRouter(root, highlightNav);

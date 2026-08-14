@@ -3,6 +3,7 @@ import { getMonthSummary } from '../budget-logic.js';
 import { formatMoney, monthLabel, currentMonth, shiftMonth, escapeHtml } from '../format.js';
 import { openCategoryModal } from '../category-form.js';
 import { toast } from '../ui.js';
+import { icon } from '../icons.js';
 
 let state = { month: currentMonth() };
 
@@ -17,9 +18,9 @@ export async function render(root) {
   root.innerHTML = `
     <div class="view-header">
       <div class="month-switcher">
-        <button type="button" class="icon-btn" data-action="prev-month" aria-label="Previous month">‹</button>
+        <button type="button" class="icon-btn" data-action="prev-month" aria-label="Previous month">${icon('chevronLeft')}</button>
         <h2>Budget — ${monthLabel(state.month)}</h2>
-        <button type="button" class="icon-btn" data-action="next-month" aria-label="Next month">›</button>
+        <button type="button" class="icon-btn" data-action="next-month" aria-label="Next month">${icon('chevronRight')}</button>
       </div>
       <div class="header-actions">
         <button type="button" class="btn btn-ghost" data-action="fill-targets">Fill from targets</button>
