@@ -2,30 +2,78 @@ import { DB } from '../db.js';
 import { getMonthSummary } from '../budget-logic.js';
 import { formatMoney, monthLabel, currentMonth, shiftMonth, escapeHtml } from '../format.js';
 import { openCategoryModal } from '../category-form.js';
+import { openSubscriptionModal } from '../subscription-form.js';
 import { toast } from '../ui.js';
 import { icon } from '../icons.js';
+import * as subscriptionsSegment from './subscriptions.js';
 
-let state = { month: currentMonth() };
+let state = { month: currentMonth(), segment: 'envelopes' };
 
 export async function render(root) {
+  root.innerHTML = `
+    <div class="view-header">
+      <h2>Budget</h2>
+      <div class="header-actions" id="budget-header-actions"></div>
+    </div>
+    <div class="segmented" style="margin-bottom:18px">
+      <button type="button" class="segmented-btn ${state.segment === 'envelopes' ? 'active' : ''}" data-segment="envelopes">Envelopes</button>
+      <button type="button" class="segmented-btn ${state.segment === 'subscriptions' ? 'active' : ''}" data-segment="subscriptions">Subscriptions</button>
+    </div>
+    <div id="budget-segment-content"></div>
+  `;
+
+  root.querySelectorAll('[data-segment]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.segment = btn.dataset.segment;
+      render(root);
+    });
+  });
+
+  const actions = root.querySelector('#budget-header-actions');
+  const content = root.querySelector('#budget-segment-content');
+
+  if (state.segment === 'subscriptions') {
+    actions.innerHTML = `<button type="button" class="btn btn-primary" data-action="add-sub">+ Add subscription</button>`;
+    actions.querySelector('[data-action="add-sub"]').addEventListener('click', () => {
+      openSubscriptionModal({ onSaved: () => render(root) });
+    });
+    await subscriptionsSegment.render(content);
+    return;
+  }
+
+  actions.innerHTML = `
+    <button type="button" class="btn btn-ghost" data-action="fill-targets">Fill from targets</button>
+    <button type="button" class="btn btn-primary" data-action="add-category">+ Category</button>
+  `;
+  await renderEnvelopes(content);
+
+  actions.querySelector('[data-action="add-category"]').addEventListener('click', () => {
+    openCategoryModal({ onSaved: () => render(root) });
+  });
+  actions.querySelector('[data-action="fill-targets"]').addEventListener('click', async () => {
+    const categories = await DB.listCategories();
+    for (const c of categories) {
+      if (c.monthlyTarget > 0) {
+        await DB.setAllocation(state.month, c.id, c.monthlyTarget);
+      }
+    }
+    toast('Allocations filled from each category’s default target.', { type: 'success' });
+    render(root);
+  });
+}
+
+async function renderEnvelopes(content) {
   const currency = await DB.getSetting('currency', 'SAR');
   const summary = await getMonthSummary(state.month);
-
   const groups = groupRows(summary.rows);
   const tbb = summary.toBeBudgeted;
   const tbbClass = tbb < 0 ? 'negative' : tbb === 0 ? 'zero' : 'positive';
 
-  root.innerHTML = `
-    <div class="view-header">
-      <div class="month-switcher">
-        <button type="button" class="icon-btn" data-action="prev-month" aria-label="Previous month">${icon('chevronLeft')}</button>
-        <h2>Budget — ${monthLabel(state.month)}</h2>
-        <button type="button" class="icon-btn" data-action="next-month" aria-label="Next month">${icon('chevronRight')}</button>
-      </div>
-      <div class="header-actions">
-        <button type="button" class="btn btn-ghost" data-action="fill-targets">Fill from targets</button>
-        <button type="button" class="btn btn-primary" data-action="add-category">+ Category</button>
-      </div>
+  content.innerHTML = `
+    <div class="month-switcher" style="margin-bottom:16px">
+      <button type="button" class="icon-btn" data-action="prev-month" aria-label="Previous month">${icon('chevronLeft')}</button>
+      <span style="font-weight:700">${monthLabel(state.month)}</span>
+      <button type="button" class="icon-btn" data-action="next-month" aria-label="Next month">${icon('chevronRight')}</button>
     </div>
 
     <div class="tbb-card tbb-${tbbClass} tbb-compact">
@@ -36,43 +84,28 @@ export async function render(root) {
     ${Object.entries(groups).length ? Object.entries(groups).map(([group, rows]) => groupSection(group, rows, currency)).join('') : `<p class="empty-hint">No categories yet — add one to start budgeting.</p>`}
   `;
 
-  root.querySelector('[data-action="prev-month"]').addEventListener('click', () => {
+  content.querySelector('[data-action="prev-month"]').addEventListener('click', () => {
     state.month = shiftMonth(state.month, -1);
-    render(root);
+    renderEnvelopes(content);
   });
-  root.querySelector('[data-action="next-month"]').addEventListener('click', () => {
+  content.querySelector('[data-action="next-month"]').addEventListener('click', () => {
     state.month = shiftMonth(state.month, 1);
-    render(root);
+    renderEnvelopes(content);
   });
-  root.querySelector('[data-action="add-category"]').addEventListener('click', () => {
-    openCategoryModal({ onSaved: () => render(root) });
-  });
-  root.querySelector('[data-action="fill-targets"]').addEventListener('click', async () => {
-    const categories = await DB.listCategories();
-    for (const c of categories) {
-      if (c.monthlyTarget > 0) {
-        await DB.setAllocation(state.month, c.id, c.monthlyTarget);
-      }
-    }
-    toast('Allocations filled from each category’s default target.', { type: 'success' });
-    render(root);
-  });
-
-  root.querySelectorAll('[data-edit-category]').forEach((el) => {
+  content.querySelectorAll('[data-edit-category]').forEach((el) => {
     el.addEventListener('click', async () => {
       const id = Number(el.dataset.editCategory);
       const cats = await DB.listCategories();
       const cat = cats.find((c) => c.id === id);
-      if (cat) openCategoryModal({ category: cat, onSaved: () => render(root) });
+      if (cat) openCategoryModal({ category: cat, onSaved: () => renderEnvelopes(content) });
     });
   });
-
-  root.querySelectorAll('[data-allocate-input]').forEach((input) => {
+  content.querySelectorAll('[data-allocate-input]').forEach((input) => {
     input.addEventListener('change', async () => {
       const categoryId = Number(input.dataset.allocateInput);
       const amount = parseFloat(input.value) || 0;
       await DB.setAllocation(state.month, categoryId, amount);
-      render(root);
+      renderEnvelopes(content);
     });
   });
 }

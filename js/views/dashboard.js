@@ -1,5 +1,6 @@
 import { DB } from '../db.js';
-import { getMonthSummary } from '../budget-logic.js';
+import { getMonthSummary, spendingByGroup } from '../budget-logic.js';
+import { stackedBarHtml } from '../charts.js';
 import { formatMoney, monthLabel, currentMonth, shiftMonth, formatDateShort, escapeHtml } from '../format.js';
 import { openTransactionModal } from '../transaction-form.js';
 import { icon } from '../icons.js';
@@ -11,6 +12,7 @@ export async function render(root) {
   const summary = await getMonthSummary(state.month);
   const recent = (await DB.listTransactions({ month: state.month })).slice(0, 6);
   const accounts = await DB.listAccounts();
+  const groupSpend = await spendingByGroup(state.month);
 
   const tbb = summary.toBeBudgeted;
   const tbbClass = tbb < 0 ? 'negative' : tbb === 0 ? 'zero' : 'positive';
@@ -49,6 +51,15 @@ export async function render(root) {
         <div class="stat-value">${formatMoney(summary.availableTotal, currency)}</div>
       </div>
     </div>
+
+    ${groupSpend.length ? `
+    <section class="panel">
+      <div class="panel-header">
+        <h3>Where it's going</h3>
+        <a href="#/insights" class="link">Full breakdown →</a>
+      </div>
+      ${stackedBarHtml(groupSpend, { currency })}
+    </section>` : ''}
 
     <section class="panel">
       <div class="panel-header">

@@ -2,11 +2,9 @@ import { DB } from './db.js';
 import { registerRoute, startRouter } from './router.js';
 import { generateDueTransactions } from './subscription-logic.js';
 import { toast } from './ui.js';
-import * as dashboard from './views/dashboard.js';
-import * as track from './views/track.js';
+import * as home from './views/dashboard.js';
 import * as transactions from './views/transactions.js';
 import * as budget from './views/budget.js';
-import * as subscriptions from './views/subscriptions.js';
 import * as insights from './views/insights.js';
 import * as networth from './views/networth.js';
 import * as settings from './views/settings.js';
@@ -22,7 +20,7 @@ const DEFAULT_CATEGORIES = [
   { name: 'Investing', group: 'Investing', monthlyTarget: 0 },
 ];
 
-const PALETTE = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16'];
+const PALETTE = ['#15803d', '#2563eb', '#f59e0b', '#dc2626', '#8b5cf6', '#0891b2', '#db2777', '#65a30d'];
 
 async function seedIfEmpty() {
   const categories = await DB.listCategories();
@@ -44,16 +42,14 @@ async function registerServiceWorker() {
 
 function highlightNav(path) {
   document.querySelectorAll('.nav-link').forEach((link) => {
-    link.classList.toggle('active', link.getAttribute('href') === `#${path}`);
+    link.classList.toggle('active', link.dataset.path === path);
   });
 }
 
 async function main() {
-  registerRoute('/', dashboard.render);
-  registerRoute('/track', track.render);
+  registerRoute('/', home.render);
   registerRoute('/transactions', transactions.render);
   registerRoute('/budget', budget.render);
-  registerRoute('/subscriptions', subscriptions.render);
   registerRoute('/insights', insights.render);
   registerRoute('/networth', networth.render);
   registerRoute('/settings', settings.render);
@@ -71,13 +67,6 @@ async function main() {
 
   const root = document.getElementById('app-view');
   await startRouter(root, highlightNav);
-
-  document.getElementById('nav-toggle')?.addEventListener('click', () => {
-    document.getElementById('nav')?.classList.toggle('open');
-  });
-  document.querySelectorAll('.nav-link').forEach((link) => {
-    link.addEventListener('click', () => document.getElementById('nav')?.classList.remove('open'));
-  });
 
   registerServiceWorker();
 }

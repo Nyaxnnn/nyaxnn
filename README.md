@@ -5,6 +5,13 @@ insights, and manual net worth/investment tracking. There is no backend, no
 account, and no analytics — your data lives only in this browser's storage on
 this device, in a per-browser IndexedDB database.
 
+Five screens, not eight: **Home, Transactions, Budget, Insights, Net Worth** —
+with Settings tucked behind the gear icon in the top bar rather than taking up
+a tab, matching how apps like Monarch Money organize their navigation. The
+visual design (bright, card-based, soft shadows instead of heavy borders,
+bold confident numbers) follows the same reference points that make Copilot
+Money the design benchmark in this category.
+
 ## Running it
 
 No build step, no dependencies, no `npm install`. It's plain HTML/CSS/JS.
@@ -54,7 +61,8 @@ can open from your phone too:
 By design, there is no server-side sync — that's what keeps this private. Each
 device's data is independent. To move data between devices:
 
-1. On the source device: **Settings → Export backup (.json)**. This downloads
+1. On the source device: open **Settings** (the gear icon, top right) →
+   **Export backup (.json)**. This downloads
    a single JSON file with everything — accounts, transactions, budget,
    balances.
 2. Get that file onto the other device (AirDrop, a USB cable, a private
@@ -73,30 +81,30 @@ sync — that trade-off is what avoids needing any server at all.
 browsing cleanup, or reinstalling the OS will wipe IndexedDB. Export
 periodically the same way you'd back up anything else you care about.
 
-## Logging daily spending
+## Logging spending
 
-The **Track** tab is the fast path for daily use: a big amount field, one-tap
-category chips, and an "Add expense" button that doesn't navigate away, so you
-can log several purchases in a row. Every entry is a normal transaction under
-the hood — it immediately counts against that category's envelope (you'll see
-a toast confirming the updated spent/allocated amount) and shows up in Budget
-and Insights right away. Below the quick-add form is a day-by-day log of the
-month so far, with a subtotal per day.
-
-The **Transactions** tab is the same underlying data, but built for reviewing
-and filtering (by account, category, search) rather than fast entry.
+The **Transactions** tab does both jobs that used to be two separate tabs
+(previously "Track" and "Transactions" — merged because they were really the
+same data shown two different ways). At the top: a big amount field, one-tap
+category chips, and an "Add expense" button that doesn't navigate away, so
+you can log several purchases in a row (there's also an "Income / transfer…"
+link for anything the quick form doesn't cover). Every entry immediately
+counts against that category's envelope — you'll see a toast confirming the
+updated spent/allocated amount — and shows up in Budget and Insights right
+away. Below that is the full searchable, filterable history.
 
 ## Subscriptions (recurring charges)
 
-The **Subscriptions** tab handles anything that charges you on a schedule —
-Netflix, gym membership, insurance, rent. Set a name, amount, category,
-account, and whether it repeats **monthly** (on a day of the month) or
-**yearly** (on a specific month + day), and Mizan takes it from there:
+Subscriptions live inside the **Budget** tab now, as a second segment next to
+Envelopes — a recurring charge is a budgeting concern, so it sits where
+you're already looking. Set a name, amount, category, account, and whether it
+repeats **monthly** (on a day of the month) or **yearly** (on a specific
+month + day), and Mizan takes it from there:
 
 - Every due date, a real expense transaction is generated automatically —
-  no manual entry — and it shows up in **Track**'s daily log (tagged "auto"
-  with a repeat icon) and counts against its category's envelope in
-  **Budget**, exactly like anything you logged by hand.
+  no manual entry — and it shows up in **Transactions** (tagged "auto" with
+  a repeat icon) and counts against its category's envelope, exactly like
+  anything you logged by hand.
 - Since this is a local-first app with no server running in the background,
   "automatic" means: it catches up on every due date, generating each one
   it missed, the next time you open the app on or after that date — it
@@ -104,15 +112,25 @@ account, and whether it repeats **monthly** (on a day of the month) or
 - Pausing a subscription stops future charges without deleting the history
   of what it already generated; resuming immediately catches up anything
   that came due while paused.
-- The tab also shows your total monthly and yearly recurring cost across
+- The segment also shows your total monthly and yearly recurring cost across
   everything active, so you can see that number at a glance.
+
+## Digging deeper in Insights
+
+Beyond the category donut and income/expense trend, **Insights** has a
+"Browse by category" section: a checklist of every category, each showing
+its spend for the month. Check one or more, and a compact scrollable panel
+next to the list fills in with every transaction behind those numbers —
+so a spending total is never a dead end, you can always see exactly which
+purchases it's made of without leaving the page or drowning it in a wall of
+detail you didn't ask for.
 
 ## How the budgeting works
 
 Zero-based / envelope budgeting, the method behind YNAB:
 
 - Every SAR you earn (an **Income** transaction) adds to a **To Be Budgeted**
-  pool, shown at the top of the Dashboard and Budget tab.
+  pool, shown at the top of Home and the Budget tab.
 - You assign that pool into **categories** (envelopes) on the Budget tab —
   Rent, Groceries, Investing, etc.
 - Spending (an **Expense** transaction) draws down the category you assign it to.
@@ -158,7 +176,8 @@ js/charts.js            Dependency-free SVG bar/line/donut chart renderers
 js/ui.js                Modal/toast helpers shared across views
 js/icons.js             Inline SVG icon set (no icon font, no external asset)
 js/*-form.js            Add/edit modals for transactions, categories, accounts, subscriptions
-js/views/*.js           One render function per screen (Dashboard, Track, Budget, Subscriptions, …)
+js/views/*.js           One render function per screen: dashboard.js is Home, subscriptions.js
+                        renders as a segment inside budget.js rather than its own route
 js/router.js, main.js   Hash router + app bootstrap, first-run category seeding
 icons/                  PWA icons (generated locally, no external assets)
 ```

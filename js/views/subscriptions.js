@@ -1,3 +1,7 @@
+// Rendered as a segment inside the Budget view (not a standalone route) —
+// recurring charges are a budgeting concern, so they live next to envelopes
+// instead of getting their own top-level tab.
+
 import { DB } from '../db.js';
 import { monthlyEquivalent, yearlyEquivalent, nextDueDate, generateDueTransactions } from '../subscription-logic.js';
 import { formatMoney, formatDateLong, escapeHtml } from '../format.js';
@@ -22,11 +26,6 @@ export async function render(root) {
   });
 
   root.innerHTML = `
-    <div class="view-header">
-      <h2>Subscriptions</h2>
-      <button type="button" class="btn btn-primary" data-action="add">+ Add subscription</button>
-    </div>
-
     <div class="stat-row">
       <div class="stat-card highlight">
         <div class="stat-label">Monthly cost</div>
@@ -43,7 +42,7 @@ export async function render(root) {
     </div>
 
     <div class="banner">
-      Due charges are added to Track and Budget automatically — every time the amount and due date you set actually arrives, without you having to remember to enter it. Since there's no background server, "automatic" means it catches up the next time you open the app on or after the due date.
+      Due charges are added to Transactions and here automatically — every time the amount and due date you set actually arrives, without you having to remember to enter it. Since there's no background server, "automatic" means it catches up the next time you open the app on or after the due date.
     </div>
 
     <section class="panel" style="margin-top:16px">
@@ -53,10 +52,6 @@ export async function render(root) {
       </div>
     </section>
   `;
-
-  root.querySelector('[data-action="add"]').addEventListener('click', () => {
-    openSubscriptionModal({ onSaved: () => render(root) });
-  });
 
   root.querySelectorAll('[data-edit-sub]').forEach((el) => {
     el.addEventListener('click', async () => {

@@ -9,6 +9,32 @@ export function colorFor(index) {
   return PALETTE[index % PALETTE.length];
 }
 
+// Compact single-row stacked bar: data = [{ label, value, color }]. Made for
+// glanceable "mix" previews (e.g. a Needs/Wants/Savings split on Home) where
+// a full donut+legend would take up more room than the context deserves.
+export function stackedBarHtml(data, { currency = 'SAR' } = {}) {
+  const total = data.reduce((s, d) => s + d.value, 0);
+  if (!total) return `<div class="chart-empty">Not enough data yet</div>`;
+  const segments = data
+    .map((d, i) => {
+      const pct = (d.value / total) * 100;
+      const color = d.color || colorFor(i);
+      return `<span style="width:${pct}%;background:${color}" title="${escapeHtml(d.label)}: ${escapeHtml(formatMoneyCompact(d.value, currency))}"></span>`;
+    })
+    .join('');
+  const legend = data
+    .map((d, i) => `
+      <span class="mix-legend-item">
+        <span class="legend-dot" style="background:${d.color || colorFor(i)}"></span>
+        ${escapeHtml(d.label)} · ${Math.round((d.value / total) * 100)}%
+      </span>`)
+    .join('');
+  return `
+    <div class="mix-bar">${segments}</div>
+    <div class="mix-legend">${legend}</div>
+  `;
+}
+
 // Horizontal bar chart: data = [{ label, value }]
 export function barChart(data, { currency = 'SAR', width = 600, barHeight = 28, gap = 12 } = {}) {
   if (!data.length) return emptyState();

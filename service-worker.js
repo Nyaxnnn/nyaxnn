@@ -2,7 +2,7 @@
 // or touches your financial data — that lives in IndexedDB, which this file
 // cannot see.
 
-const CACHE_NAME = 'mizan-v7';
+const CACHE_NAME = 'mizan-v8';
 const PRECACHE_URLS = [
   './',
   './index.html',
@@ -23,7 +23,6 @@ const PRECACHE_URLS = [
   './js/router.js',
   './js/main.js',
   './js/views/dashboard.js',
-  './js/views/track.js',
   './js/views/transactions.js',
   './js/views/budget.js',
   './js/views/subscriptions.js',
